@@ -1,6 +1,5 @@
 from flask import Blueprint, jsonify
 from db_helpers import get_db_connection
-import psycopg2, psycopg2.extras
 
 products_blueprint = Blueprint("products" , __name__)
 
@@ -32,3 +31,40 @@ def get_all_products():
         if 'connection' in locals():
             connection.close()
         return jsonify({'error': f'Failed to fetch products: {str(e)}'}), 500
+    
+@products_blueprint.route("/<int:id>", methods=["GET"])
+def get_product_detail(id):
+    try:
+        connection = get_db_connection()
+        cursor = connection.cursor()
+        cursor.execute("""
+            SELECT id, name, description, price, stock, created_at 
+            FROM products 
+            WHERE id = %s
+        """, (id,))
+        product = cursor.fetchone()
+
+        if not product:
+            cursor.close()
+            connection.close()
+            return jsonify({'error': 'Product not found'}), 404
+        
+        product_detail = {
+            'id': product[0],
+            'name': product[1],
+            'description': product[2],
+            'price': float(product[3]),
+            'stock': product[4],
+            'created_at': product[5].isoformat()
+        }
+
+        cursor.close()
+        connection.close()
+        return jsonify(product_detail)
+    except Exception as e:
+        if 'connection' in locals():
+            connection.close()
+        return jsonify({'error': f'Failed to fetch product: {str(e)}'}), 500
+    
+    
+
