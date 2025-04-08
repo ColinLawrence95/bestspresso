@@ -14,7 +14,6 @@ def get_db_connection():
     return connection
 
 def get_user_balance(user_id):
-    """Fetch the user's balance from the users table"""
     connection = get_db_connection()
     cursor = connection.cursor()
     cursor.execute("SELECT balance FROM users WHERE id = %s", (user_id,))
