@@ -1,5 +1,7 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, g
 from db_helpers import get_db_connection
+from flask import request
+from auth_middleware import token_required
 
 products_blueprint = Blueprint("products" , __name__)
 
@@ -8,7 +10,7 @@ def get_all_products():
     try:
         connection = get_db_connection()
         cursor = connection.cursor()
-        cursor.execute("SELECT id, name, description, price, stock, created_at FROM products")
+        cursor.execute("SELECT id, name, description, price, stock, rating FROM products")
         products = cursor.fetchall()
         
         if not products:
@@ -20,7 +22,7 @@ def get_all_products():
             'description': row[2],
             'price': float(row[3]),
             'stock': row[4],
-            'created_at': row[5].isoformat()
+            'rating': float(row[5]) if row[5] is not None else 0.0
         } for row in products]
         
         cursor.close()
@@ -38,7 +40,7 @@ def get_product_detail(id):
         connection = get_db_connection()
         cursor = connection.cursor()
         cursor.execute("""
-            SELECT id, name, description, price, stock, created_at 
+            SELECT id, name, description, price, stock, rating
             FROM products 
             WHERE id = %s
         """, (id,))
@@ -55,7 +57,7 @@ def get_product_detail(id):
             'description': product[2],
             'price': float(product[3]),
             'stock': product[4],
-            'created_at': product[5].isoformat()
+            'rating': float(product[5]) if product[5] is not None else 0.0
         }
 
         cursor.close()
@@ -66,5 +68,61 @@ def get_product_detail(id):
             connection.close()
         return jsonify({'error': f'Failed to fetch product: {str(e)}'}), 500
     
+@products_blueprint.route('/<int:id>/rate', methods=['POST'])
+@token_required
+def rate_product(id):
+    user_id = g.user.get('id')
+    if not user_id:
+        return jsonify({'error': 'User ID not found in token'}), 401
+
+    data = request.get_json()
+    rating = data.get('rating')
+    print(f"Received rating: {rating} (type: {type(rating)}) for product ID: {id}")
+
+    if rating is None or not isinstance(rating, (int, float)) or rating < 0 or rating > 5:
+        return jsonify({'error': 'Rating must be a number between 0 and 5'}), 400
+
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+
+        cur.execute("SELECT id FROM products WHERE id = %s", (id,))
+        if not cur.fetchone():
+            cur.close()
+            conn.close()
+            return jsonify({'error': 'Product not found'}), 404
+
+        cur.execute("""
+            INSERT INTO product_ratings (user_id, product_id, rating)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (user_id, product_id) 
+            DO UPDATE SET rating = EXCLUDED.rating, created_at = CURRENT_TIMESTAMP
+        """, (user_id, id, float(rating)))
+
+        cur.execute("""
+            UPDATE products 
+            SET rating = (
+                SELECT AVG(rating) 
+                FROM product_ratings 
+                WHERE product_id = %s
+            )
+            WHERE id = %s
+        """, (id, id))
+
+        conn.commit()
+        
+        cur.execute("SELECT rating FROM products WHERE id = %s", (id,))
+        new_avg = cur.fetchone()[0]
+        print(f"New average rating for product ID {id}: {new_avg}")
+
+        cur.close()
+        conn.close()
+        return jsonify({'message': 'Rating updated successfully'}), 200
+    except Exception as e:
+        if 'conn' in locals():
+            conn.rollback()
+            conn.close()
+        print(f"Error: {str(e)}")
+        return jsonify({'error': f'Failed to update rating: {str(e)}'}), 500
     
 

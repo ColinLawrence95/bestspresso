@@ -157,7 +157,6 @@ def update_cart_item(id):
         conn = get_db_connection()
         cur = conn.cursor()
 
-        # Verify item belongs to user's cart and check stock
         cur.execute("""
             SELECT ci.quantity, p.stock
             FROM cart_items ci
