@@ -11,14 +11,14 @@ from user_blueprint import user_blueprint
 load_dotenv()
 
 app = Flask(__name__)
-app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET')  # Needed for JWT
-CORS(app)  # Enable CORS for React frontend
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET') 
+CORS(app) 
 
-# Register Blueprints
+
 app.register_blueprint(authentication_blueprint, url_prefix="/auth")
 app.register_blueprint(products_blueprint, url_prefix="/products")
 app.register_blueprint(cart_blueprint, url_prefix="/cart")
 app.register_blueprint(user_blueprint, url_prefix="/user")
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)  # Run only if executed directly
+    app.run()

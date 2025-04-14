@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, g
 from db_helpers import get_db_connection, get_user_balance
 from auth_middleware import token_required
-from decimal import Decimal
+
 
 cart_blueprint = Blueprint("cart", __name__)
 
