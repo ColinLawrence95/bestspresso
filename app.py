@@ -15,6 +15,7 @@ app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET')
 CORS(app) 
 
 
+
 app.register_blueprint(authentication_blueprint, url_prefix="/auth")
 app.register_blueprint(products_blueprint, url_prefix="/products")
 app.register_blueprint(cart_blueprint, url_prefix="/cart")

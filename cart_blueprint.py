@@ -69,7 +69,7 @@ def view_cart():
         cursor = connection.cursor()
 
         cursor.execute("""
-            SELECT ci.id, ci.product_id, p.name, p.price, ci.quantity
+            SELECT ci.id, ci.product_id, p.name, p.price, ci.quantity, p.photo_url
             FROM carts c
             JOIN cart_items ci ON c.id = ci.cart_id
             JOIN products p ON ci.product_id = p.id
@@ -90,7 +90,8 @@ def view_cart():
             'name': row[2],
             'price': float(row[3]),
             'quantity': row[4],
-            'subtotal': float(row[3]) * row[4]
+            'subtotal': float(row[3]) * row[4],
+            'photo_url': row[5]
         } for row in items]
 
         total = sum(item['subtotal'] for item in cart_items)
