@@ -20,5 +20,4 @@ app.register_blueprint(products_blueprint, url_prefix="/products")
 app.register_blueprint(cart_blueprint, url_prefix="/cart")
 app.register_blueprint(user_blueprint, url_prefix="/user")
 
-if __name__ == '__main__':
-    app.run()
+app.run()
