@@ -4,7 +4,7 @@
 
 Bestpresso is an e-commerce platform for coffee lovers, offering a curated selection of premium coffee blends. The backend, built with Flask and PostgreSQL, powers the core functionality, including user authentication, product management, cart operations, and product ratings. It serves a paginated product list (9 products per page) with random local photos assigned once to each product for consistency across the frontend. I created Bestpresso as a learning expericance to dive into the world of e-commerce and digital marketplaces.
 
-For more details, visit the Bestpresso Frontend Repository.
+For more details, visit the Bestpresso Frontend Repository: https://github.com/ColinLawrence95/bestspresso-front-end
 
 ## Getting Started
 
